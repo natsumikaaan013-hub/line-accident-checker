@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LINE事故診断くん</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="title">LINE事故診断くん</h1>
+      <p class="subtitle">送信前に、その一通の事故率を診断します</p>
+    </header>
+
+    <main>
+      <form id="diagnoseForm" novalidate>
+        <!-- 必須：LINE文面 -->
+        <section class="form-section">
+          <label class="label required" for="message">送ろうとしているLINE文面</label>
+          <div class="textarea-wrapper">
+            <textarea
+              id="message"
+              name="message"
+              placeholder="ここに送ろうとしているLINE文面を入力してください"
+              maxlength="2000"
+              rows="5"
+              aria-required="true"
+              aria-describedby="message-count message-error"
+            ></textarea>
+            <span class="char-count" id="message-count">0 / 2000</span>
+          </div>
+          <p class="field-error" id="message-error" role="alert" aria-live="polite"></p>
+        </section>
+
+        <!-- 必須：相手との段階 -->
+        <section class="form-section">
+          <fieldset>
+            <legend class="label required">相手との段階</legend>
+            <div class="radio-group" role="radiogroup">
+              <label class="radio-label">
+                <input type="radio" name="stage" value="LINE交換したばかり" />
+                <span>LINE交換したばかり</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="stage" value="デート前" />
+                <span>デート前</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="stage" value="デート直後" />
+                <span>デート直後</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="stage" value="告白前" />
+                <span>告白前</span>
+              </label>
+            </div>
+            <p class="field-error" id="stage-error" role="alert" aria-live="polite"></p>
+          </fieldset>
+        </section>
+
+        <!-- 任意項目（折りたたみ） -->
+        <section class="form-section optional-section">
+          <button type="button" class="toggle-optional" id="toggleOptional" aria-expanded="false" aria-controls="optionalFields">
+            <span class="toggle-icon" aria-hidden="true">＋</span>
+            詳しく診断する（任意項目）
+          </button>
+          <div id="optionalFields" class="optional-fields" hidden>
+            <div class="form-section inner">
+              <label class="label" for="previousMessage">直前の相手からのLINE</label>
+              <textarea
+                id="previousMessage"
+                name="previousMessage"
+                placeholder="相手の直前のメッセージを入力（任意）"
+                rows="3"
+              ></textarea>
+            </div>
+            <div class="form-section inner">
+              <label class="label" for="intent">自分の意図</label>
+              <select id="intent" name="intent">
+                <option value="選択しない">選択しない</option>
+                <option value="お礼">お礼</option>
+                <option value="日程調整">日程調整</option>
+                <option value="繋ぎ会話">繋ぎ会話</option>
+                <option value="告白">告白</option>
+              </select>
+            </div>
+            <div class="form-section inner">
+              <label class="label" for="partnerName">相手の呼び方</label>
+              <input
+                type="text"
+                id="partnerName"
+                name="partnerName"
+                placeholder="例：さくらちゃん（任意・20文字以内）"
+                maxlength="20"
+              />
+            </div>
+          </div>
+        </section>
+
+        <div class="submit-area">
+          <p class="general-error" id="general-error" role="alert" aria-live="polite"></p>
+          <button type="submit" class="btn-diagnose" id="submitBtn">
+            <span class="btn-text">診断する</span>
+            <span class="btn-loading" hidden aria-hidden="true">診断中...</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- 結果表示エリア -->
+      <section class="result-area" id="resultArea" hidden aria-live="polite">
+        <div class="result-card">
+          <!-- 事故率 -->
+          <div class="accident-rate-section">
+            <p class="rate-label">事故率</p>
+            <div class="rate-display">
+              <span class="rate-value" id="rateValue">--</span>
+              <span class="rate-percent">%</span>
+            </div>
+            <span class="level-badge" id="levelBadge">--</span>
+          </div>
+
+          <!-- 3軸スコア -->
+          <div class="scores-section">
+            <h2 class="section-heading">3軸スコア</h2>
+            <div class="score-item">
+              <div class="score-header">
+                <span class="score-name">具体性</span>
+                <span class="score-num" id="scoreSpecificity">-</span><span class="score-denom">/10</span>
+              </div>
+              <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10">
+                <div class="progress-fill" id="barSpecificity"></div>
+              </div>
+            </div>
+            <div class="score-item">
+              <div class="score-header">
+                <span class="score-name">感情</span>
+                <span class="score-num" id="scoreEmotion">-</span><span class="score-denom">/10</span>
+              </div>
+              <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10">
+                <div class="progress-fill" id="barEmotion"></div>
+              </div>
+            </div>
+            <div class="score-item">
+              <div class="score-header">
+                <span class="score-name">次回意思</span>
+                <span class="score-num" id="scoreNextIntention">-</span><span class="score-denom">/10</span>
+              </div>
+              <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="10">
+                <div class="progress-fill" id="barNextIntention"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 診断コメント -->
+          <div class="comment-section">
+            <h2 class="section-heading">診断コメント</h2>
+            <p class="comment-text" id="commentText"></p>
+          </div>
+
+          <!-- 改善方向性 -->
+          <div class="improvements-section">
+            <h2 class="section-heading">改善方向性</h2>
+            <ul class="improvement-list">
+              <li class="improvement-item">
+                <span class="improvement-axis">具体性</span>
+                <p class="improvement-text" id="improveSpecificity"></p>
+              </li>
+              <li class="improvement-item">
+                <span class="improvement-axis">感情</span>
+                <p class="improvement-text" id="improveEmotion"></p>
+              </li>
+              <li class="improvement-item">
+                <span class="improvement-axis">次回意思</span>
+                <p class="improvement-text" id="improveNextIntention"></p>
+              </li>
+            </ul>
+          </div>
+
+          <!-- 改善例文 -->
+          <div class="example-section">
+            <h2 class="section-heading">改善例文</h2>
+            <div class="example-card">
+              <p class="example-text" id="exampleText"></p>
+              <button type="button" class="btn-copy" id="copyBtn" aria-label="例文をコピー">コピー</button>
+            </div>
+            <p class="example-note">この方向性で、あなたの言葉に置き換えてください</p>
+          </div>
+        </div>
+
+        <div class="retry-area">
+          <button type="button" class="btn-retry" id="retryBtn">もう一度診断する</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>本ツールは診断の目安を提供するものであり、結果を保証するものではありません</p>
+      <p>入力されたデータは一切保存されません</p>
+      <p>note『非モテは治すな』購入者限定特典です。商用利用・転載を禁じます</p>
+      <p>予告なくサービスを終了する場合があります</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

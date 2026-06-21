@@ -1,0 +1,11 @@
+{
+  "name": "line-accident-checker",
+  "version": "1.0.0",
+  "description": "LINE事故診断くん - noteの購入者特典",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.27.0"
+  }
+}
