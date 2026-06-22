@@ -312,6 +312,10 @@ select {
   display: inline;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 /* ========== Result area ========== */
 .result-area[hidden] {
   display: none;
